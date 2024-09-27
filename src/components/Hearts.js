@@ -60,12 +60,17 @@ const Hearts = ({ speed = 200, count = 500, maxActiveHearts = 15 }) => {
     const typerRect = typerRef.current?.getBoundingClientRect();
 
     // Check collision with the Typer component
-    if (typerRect && 
-        heartRect.bottom >= typerRect.top &&
-        heartRect.top <= typerRect.bottom &&
-        heartRect.right >= typerRect.left &&
-        heartRect.left <= typerRect.right) {
-      return 'delete'; // Signal to delete this heart
+    if (typerRect) {
+      if (heartRect.bottom >= typerRect.top &&
+          heartRect.top <= typerRect.bottom &&
+          heartRect.right >= typerRect.left &&
+          heartRect.left <= typerRect.right) {
+        // Check if the heart is sitting on top of the Typer
+        if (Math.abs(heartRect.bottom - typerRect.top) < 5) {
+          return { top: typerRect.top - heartRect.height, left: heart.left, onTyper: true };
+        }
+        return 'delete'; // Signal to delete this heart if it's inside the Typer
+      }
     }
 
     // Check collision with the bottom of the container
@@ -106,33 +111,55 @@ const Hearts = ({ speed = 200, count = 500, maxActiveHearts = 15 }) => {
 
     const updateHearts = (timestamp) => {
       const containerRect = containerRef.current?.getBoundingClientRect();
+      const typerRect = typerRef.current?.getBoundingClientRect();
 
       setHearts(prevHearts => {
         const newHearts = prevHearts.reduce((acc, heart) => {
-          if (heart.settled) {
-            acc.push(heart);
-          } else {
-            // Update heart position
-            heart.top += heart.speed * (timestamp - (heart.lastTimestamp || timestamp)) / 1000;
-            heart.rotation += heart.spinAmount * (timestamp - (heart.lastTimestamp || timestamp)) / 1000;
-            heart.lastTimestamp = timestamp;
+          const heartElement = document.getElementById(`heart-${heart.id}`);
+          if (!heartElement) return acc;
 
-            const collisionResult = checkCollision(heart, acc);
-            
-            if (collisionResult === 'delete') {
-              setActiveHearts(prev => prev - 1);
-              // Don't add this heart to acc, effectively deleting it
-            } else if (collisionResult) {
-              heart.settled = true;
-              heart.top = collisionResult.top;
-              setActiveHearts(prev => prev - 1);
-              acc.push(heart);
-            } else if (heart.top > containerRect.height) {
-              setActiveHearts(prev => prev - 1);
-              // Don't add this heart to acc if it's out of bounds
+          const heartRect = heartElement.getBoundingClientRect();
+
+          if (heart.settled) {
+            // Check if the heart is on the Typer and if the space underneath has cleared
+            if (heart.onTyper && heartRect.bottom < typerRect.top) {
+              heart.settled = false;
+              heart.onTyper = false;
             } else {
               acc.push(heart);
+              return acc;
             }
+          }
+
+          // Update heart position
+          heart.top += heart.speed * (timestamp - (heart.lastTimestamp || timestamp)) / 1000;
+          
+          // Only update rotation if the heart is not on the Typer
+          if (!heart.onTyper) {
+            heart.rotation += heart.spinAmount * (timestamp - (heart.lastTimestamp || timestamp)) / 1000;
+          }
+          
+          heart.lastTimestamp = timestamp;
+
+          const collisionResult = checkCollision(heart, acc);
+          
+          if (collisionResult === 'delete') {
+            setActiveHearts(prev => prev - 1);
+            // Don't add this heart to acc, effectively deleting it
+          } else if (collisionResult) {
+            heart.settled = true;
+            heart.top = collisionResult.top;
+            heart.onTyper = collisionResult.onTyper || false;
+            if (heart.onTyper) {
+              heart.rotation = 0; // Reset rotation when settling on Typer
+            }
+            setActiveHearts(prev => prev - 1);
+            acc.push(heart);
+          } else if (heart.top > containerRect.height) {
+            setActiveHearts(prev => prev - 1);
+            // Don't add this heart to acc if it's out of bounds
+          } else {
+            acc.push(heart);
           }
           return acc;
         }, []);

@@ -37,7 +37,7 @@ const Home = () => {
             </section>
           </main>
           <footer className="mt-8 p-4 text-center">
-            <p className="text-xl text-white">Jacky :)</p>
+            <p className="text-xl text-white">Jacky :) ~ @jacky__liu</p>
           </footer>
         </div>
       </div>

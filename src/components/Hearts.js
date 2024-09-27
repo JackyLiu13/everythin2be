@@ -14,7 +14,7 @@ const HeartContainer = styled.div`
 
 const Heart = styled.div`
   position: absolute;
-  font-size: 20px;
+  font-size: 40px;
   user-select: none;
   will-change: transform;
   color: pink;
@@ -33,7 +33,7 @@ const TyperWrapper = styled.div`
   color: white;
 `;
 
-const Hearts = ({ speed = 200, count = 500, maxActiveHearts = 15 }) => {
+const Hearts = ({ speed = 120, count = 500, maxActiveHearts = 15 }) => {
   const [hearts, setHearts] = useState([]);
   const [activeHearts, setActiveHearts] = useState(0); // Track currently active hearts
   const containerRef = useRef(null);
@@ -50,6 +50,7 @@ const Hearts = ({ speed = 200, count = 500, maxActiveHearts = 15 }) => {
     spinAmount: 360 + Math.random() * 360,
     rotation: 0,
     settled: false,
+    hasFoundation: false,
   });
 
   const checkCollision = (heart, allHearts) => {
@@ -58,6 +59,7 @@ const Hearts = ({ speed = 200, count = 500, maxActiveHearts = 15 }) => {
 
     const heartRect = heartElement.getBoundingClientRect();
     const typerRect = typerRef.current?.getBoundingClientRect();
+    const containerRect = containerRef.current.getBoundingClientRect();
 
     // Check collision with the Typer component
     if (typerRect) {
@@ -67,15 +69,15 @@ const Hearts = ({ speed = 200, count = 500, maxActiveHearts = 15 }) => {
           heartRect.left <= typerRect.right) {
         // Check if the heart is sitting on top of the Typer
         if (Math.abs(heartRect.bottom - typerRect.top) < 5) {
-          return { top: typerRect.top - heartRect.height, left: heart.left, onTyper: true };
+          return { top: typerRect.top - heartRect.height, left: heart.left, onTyper: true, hasFoundation: false };
         }
         return 'delete'; // Signal to delete this heart if it's inside the Typer
       }
     }
 
     // Check collision with the bottom of the container
-    if (heartRect.bottom >= containerRef.current.getBoundingClientRect().bottom) {
-      return { top: containerRef.current.getBoundingClientRect().bottom - heartRect.height, left: heart.left };
+    if (heartRect.bottom >= containerRect.bottom) {
+      return { top: containerRect.bottom - heartRect.height, left: heart.left, hasFoundation: true };
     }
 
     // Check collision with other settled hearts
@@ -91,11 +93,12 @@ const Hearts = ({ speed = 200, count = 500, maxActiveHearts = 15 }) => {
       if (heartRect.bottom >= settledRect.top &&
           heartRect.left < settledRect.right &&
           heartRect.right > settledRect.left) {
-        const collisionTop = settledRect.top - heartRect.height; // Position it on top of the settled heart
+        const collisionTop = settledRect.top - heartRect.height;
         if (!highestCollision || collisionTop < highestCollision.top) {
           highestCollision = {
             top: collisionTop,
             left: heart.left,
+            hasFoundation: settledHeart.hasFoundation,
           };
         }
       }
@@ -121,8 +124,8 @@ const Hearts = ({ speed = 200, count = 500, maxActiveHearts = 15 }) => {
           const heartRect = heartElement.getBoundingClientRect();
 
           if (heart.settled) {
-            // Check if the heart is on the Typer and if the space underneath has cleared
-            if (heart.onTyper && heartRect.bottom < typerRect.top) {
+            // Check if the heart should start falling
+            if (!heart.hasFoundation && heartRect.bottom < typerRect.top - 5) {
               heart.settled = false;
               heart.onTyper = false;
             } else {
@@ -134,8 +137,8 @@ const Hearts = ({ speed = 200, count = 500, maxActiveHearts = 15 }) => {
           // Update heart position
           heart.top += heart.speed * (timestamp - (heart.lastTimestamp || timestamp)) / 1000;
           
-          // Only update rotation if the heart is not on the Typer
-          if (!heart.onTyper) {
+          // Only update rotation if the heart is not settled
+          if (!heart.settled) {
             heart.rotation += heart.spinAmount * (timestamp - (heart.lastTimestamp || timestamp)) / 1000;
           }
           
@@ -150,6 +153,7 @@ const Hearts = ({ speed = 200, count = 500, maxActiveHearts = 15 }) => {
             heart.settled = true;
             heart.top = collisionResult.top;
             heart.onTyper = collisionResult.onTyper || false;
+            heart.hasFoundation = collisionResult.hasFoundation;
             if (heart.onTyper) {
               heart.rotation = 0; // Reset rotation when settling on Typer
             }
@@ -181,7 +185,7 @@ const Hearts = ({ speed = 200, count = 500, maxActiveHearts = 15 }) => {
     return () => {
       cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [speed, count, maxActiveHearts]); // Add maxActiveHearts to dependencies
+  }, [speed, count, maxActiveHearts]);
 
   return (
     <HeartContainer ref={containerRef}>
@@ -200,14 +204,16 @@ const Hearts = ({ speed = 200, count = 500, maxActiveHearts = 15 }) => {
       <TyperWrapper ref={typerRef}>
         <Typer 
           content={[
-            "Everything to Me",
-            "Porter Robinson",
-            "Toronto 09/21/24"
+            "New Builds",
+            "By New Systems",
+            "09/27/24 - 09/29/24",
+            "📍 Toronto", 
+            "See you soon :)"
           ]}
-          fontSize="3rem"
-          typingSpeed={10}
-          deletingSpeed={10}
-          pauseDuration={10}
+          fontSize="4rem"
+          typingSpeed={13}
+          deletingSpeed={11}
+          pauseDuration={16}
         />
       </TyperWrapper>
     </HeartContainer>

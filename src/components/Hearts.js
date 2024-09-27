@@ -35,11 +35,10 @@ const TyperWrapper = styled.div`
 
 const Hearts = ({ speed = 120, count = 500, maxActiveHearts = 15 }) => {
   const [hearts, setHearts] = useState([]);
-  const [activeHearts, setActiveHearts] = useState(0); // Track currently active hearts
+  const [activeHearts, setActiveHearts] = useState(0);
   const containerRef = useRef(null);
   const typerRef = useRef(null);
   const animationFrameRef = useRef(null);
-  const landedPositions = useRef({}); // Track the height of settled hearts in columns
 
   const createHeart = (x = Math.random() * 100, y = -30) => ({
     id: Math.random(),
@@ -67,11 +66,7 @@ const Hearts = ({ speed = 120, count = 500, maxActiveHearts = 15 }) => {
           heartRect.top <= typerRect.bottom &&
           heartRect.right >= typerRect.left &&
           heartRect.left <= typerRect.right) {
-        // Check if the heart is sitting on top of the Typer
-        if (Math.abs(heartRect.bottom - typerRect.top) < 5) {
-          return { top: typerRect.top - heartRect.height, left: heart.left, onTyper: true, hasFoundation: false };
-        }
-        return 'delete'; // Signal to delete this heart if it's inside the Typer
+        return 'delete'; // Signal to delete this heart if it collides with the Typer
       }
     }
 
@@ -114,33 +109,20 @@ const Hearts = ({ speed = 120, count = 500, maxActiveHearts = 15 }) => {
 
     const updateHearts = (timestamp) => {
       const containerRect = containerRef.current?.getBoundingClientRect();
-      const typerRect = typerRef.current?.getBoundingClientRect();
 
       setHearts(prevHearts => {
         const newHearts = prevHearts.reduce((acc, heart) => {
           const heartElement = document.getElementById(`heart-${heart.id}`);
           if (!heartElement) return acc;
 
-          const heartRect = heartElement.getBoundingClientRect();
-
           if (heart.settled) {
-            // Check if the heart should start falling
-            if (!heart.hasFoundation && heartRect.bottom < typerRect.top - 5) {
-              heart.settled = false;
-              heart.onTyper = false;
-            } else {
-              acc.push(heart);
-              return acc;
-            }
+            acc.push(heart);
+            return acc;
           }
 
           // Update heart position
           heart.top += heart.speed * (timestamp - (heart.lastTimestamp || timestamp)) / 1000;
-          
-          // Only update rotation if the heart is not settled
-          if (!heart.settled) {
-            heart.rotation += heart.spinAmount * (timestamp - (heart.lastTimestamp || timestamp)) / 1000;
-          }
+          heart.rotation += heart.spinAmount * (timestamp - (heart.lastTimestamp || timestamp)) / 1000;
           
           heart.lastTimestamp = timestamp;
 
@@ -152,11 +134,7 @@ const Hearts = ({ speed = 120, count = 500, maxActiveHearts = 15 }) => {
           } else if (collisionResult) {
             heart.settled = true;
             heart.top = collisionResult.top;
-            heart.onTyper = collisionResult.onTyper || false;
             heart.hasFoundation = collisionResult.hasFoundation;
-            if (heart.onTyper) {
-              heart.rotation = 0; // Reset rotation when settling on Typer
-            }
             setActiveHearts(prev => prev - 1);
             acc.push(heart);
           } else if (heart.top > containerRect.height) {
@@ -202,20 +180,24 @@ const Hearts = ({ speed = 120, count = 500, maxActiveHearts = 15 }) => {
         </Heart>
       ))}
       <TyperWrapper ref={typerRef}>
-        <Typer 
-          content={[
-            "New Builds",
-            "By New Systems",
-            "09/27/24 - 09/29/24",
-            "📍 Toronto", 
-            "See you soon :)"
-          ]}
-          fontSize="4rem"
-          typingSpeed={13}
-          deletingSpeed={11}
-          pauseDuration={16}
-        />
-      </TyperWrapper>
+  <Typer 
+    content={[
+      "New Builds",
+      "By New Systems",
+      "09/27/24 - 09/29/24",
+      "📍 Toronto",
+      "Thank you...",
+      "Tommy",
+      "Vin",
+      "And Everyone Participating",
+      "Very Excited!!",
+      "See you soon :)"
+    ]}
+    typingSpeed={11}
+    deletingSpeed={11}
+    pauseDuration={28}
+  />
+</TyperWrapper>
     </HeartContainer>
   );
 };

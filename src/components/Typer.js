@@ -1,32 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import styled from 'styled-components';
-
-const TyperContainer = styled.div`
-  display: inline-block;
-  font-family: monospace;
-  font-size: ${props => props.fontSize || '1rem'};
-  line-height: 1.5;
-`;
-
-const Cursor = styled.span`
-  display: inline-block;
-  width: 0.1em;
-  height: 1.2em;
-  background-color: currentColor;
-  animation: blink 0.7s infinite;
-  vertical-align: text-bottom;
-
-  @keyframes blink {
-    50% {
-      opacity: 0;
-    }
-  }
-`;
-
-const Typer = ({ content = [], fontSize = '1rem', typingSpeed = 100, deletingSpeed = 50, pauseDuration = 1000 }) => {
+const Typer = ({ content = [], fontSize = 'text-5xl', typingSpeed = 100, deletingSpeed = 50, pauseDuration = 1000 }) => {
   const [text, setText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
   const [contentIndex, setContentIndex] = useState(0);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -55,11 +32,29 @@ const Typer = ({ content = [], fontSize = '1rem', typingSpeed = 100, deletingSpe
     return () => clearTimeout(timer);
   }, [text, isTyping, contentIndex, content, typingSpeed, deletingSpeed, pauseDuration]);
 
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const { offsetWidth, offsetHeight } = containerRef.current;
+        setDimensions({ width: offsetWidth, height: offsetHeight });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, [text]);
+
+  useEffect(() => {
+    // console.log('Typer dimensions:', dimensions);
+  }, [dimensions]);
+
   return (
-    <TyperContainer ref={containerRef} fontSize={fontSize}>
+    <div ref={containerRef} className={`inline-block font-mono ${fontSize} leading-normal`}>
       {text}
-      <Cursor />
-    </TyperContainer>
+      <span className="inline-block w-[0.1em] h-[1.2em] bg-black animate-blink align-text-bottom"></span>
+    </div>
   );
 };
 

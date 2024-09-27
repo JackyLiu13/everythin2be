@@ -1,130 +1,133 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import TypewriterText from "./TypewriterText";
-import "./Porter.css";
+// import React, { useState, useEffect, useRef } from "react";
+// import TypewriterText from "./TypewriterText";
+// import "./Porter.css";
 
-const MAX_FALLING_PORTER_FLAKES = 200;
+// const MAX_FALLING_PORTER_FLAKES = 100;
 
-const Porter = ({
-  text = "❄",
-  count = 500,
-  speed = 5,
-  color = "#fff",
-  size = "1em",
-  sentences = [
-    "Hello, World!",
-    "Welcome to Porter Robinson",
-    "Enjoy the show!",
-  ],
-}) => {
-  const [porterflakes, setPorterflakes] = useState([]);
-  const [textDimensions, setTextDimensions] = useState(null);
-  const containerRef = useRef(null);
-  const uniqueIdRef = useRef(0);
-  const animationFrameRef = useRef(null);
-  const isAnimatingRef = useRef(false);
+// const Porter = ({
+//   text = "❄",
+//   count = 500,
+//   speed = 5,
+//   color = "#fff",
+//   size = "1em",
+//   sentences = [
+//     "Hello, World!",
+//     "Welcome to Porter Robinson",
+//     "Enjoy the show!",
+//   ],
+// }) => {
+//   const [Porterflakes, setPorterflakes] = useState([]);
+//   const PorterflakeQueue = useRef([]);
+//   const containerRef = useRef(null);
+//   const landedPositions = useRef({});
+//   const highestLandedPosition = useRef(100);
 
-  const createPorterflake = useCallback(() => ({
-    id: uniqueIdRef.current++,
-    x: Math.random() * 100,
-    y: -5,
-    speed: (Math.random() * speed + 1) / 10,
-    rotation: Math.random() * 360,
-    rotationSpeed: (Math.random() - 0.5) * 3,
-  }), [speed]);
+//   const createPorterflake = (id) => ({
+//     id,
+//     x: Math.random() * 100,
+//     y: -(Math.random() * 20), // Start just above the screen
+//     speed: (Math.random() * speed + 1) / 10,
+//     rotation: Math.random() * 360,
+//     rotationSpeed: (Math.random() - 0.5) * 3,
+//     landed: false,
+//   });
 
-  const checkTypewriterCollision = useCallback((flake) => {
-    if (!textDimensions || !containerRef.current) return false;
+//   useEffect(() => {
+//     // Initialize the queue with all Porterflakes
+//     PorterflakeQueue.current = Array.from({ length: count }, (_, index) =>
+//       createPorterflake(index)
+//     );
 
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const typewriterLeft = (textDimensions.left / containerRect.width) * 100;
-    const typewriterRight = ((textDimensions.left + textDimensions.width) / containerRect.width) * 100;
-    const typewriterTop = (textDimensions.top / containerRect.height) * 100;
-    const typewriterBottom = ((textDimensions.top + textDimensions.height) / containerRect.height) * 100;
+//     // Activate initial Porterflakes
+//     setPorterflakes(
+//       PorterflakeQueue.current.splice(0, MAX_FALLING_PORTER_FLAKES)
+//     );
 
-    return (
-      flake.x >= typewriterLeft &&
-      flake.x <= typewriterRight &&
-      flake.y >= typewriterTop &&
-      flake.y <= typewriterBottom
-    );
-  }, [textDimensions]);
+//     const animationFrame = requestAnimationFrame(animate);
+//     return () => cancelAnimationFrame(animationFrame);
+//   }, [count, speed]);
 
-  const animate = useCallback(() => {
-    if (!isAnimatingRef.current) return;
+//   const checkCollision = (x, y) => {
+//     const column = Math.floor(x / 2) * 2;
+//     const pileHeight = 100 - (landedPositions.current[column] || 0);
+//     return y + 2 >= pileHeight; // Check if the next position will collide
+//   };
 
-    setPorterflakes((prevPorterflakes) => {
-      return prevPorterflakes.map((flake) => {
-        const updatedFlake = {
-          ...flake,
-          y: flake.y + flake.speed,
-          rotation: (flake.rotation + flake.rotationSpeed) % 360,
-        };
+//   const landPorterflake = (x, y) => {
+//     const column = Math.floor(x / 2) * 2;
+//     const currentHeight = landedPositions.current[column] || 0;
+//     const newHeight = Math.max(currentHeight, 100 - y);
+//     landedPositions.current[column] = newHeight;
+//     highestLandedPosition.current = Math.min(
+//       highestLandedPosition.current,
+//       100 - newHeight
+//     );
+//     return 100 - newHeight;
+//   };
 
-        if (checkTypewriterCollision(updatedFlake) || updatedFlake.y > 105) {
-          return createPorterflake(); // Reset on collision or out of bounds
-        }
+//   const animate = () => {
+//     setPorterflakes((prevPorterflakes) => {
+//       const updatedPorterflakes = prevPorterflakes.map((flake) => {
+//         if (flake.landed) return flake;
 
-        return updatedFlake;
-      });
-    });
+//         const newY = flake.y + flake.speed;
+//         const newRotation = (flake.rotation + flake.rotationSpeed) % 360;
 
-    animationFrameRef.current = requestAnimationFrame(animate);
-  }, [createPorterflake, checkTypewriterCollision]);
+//         if (checkCollision(flake.x, newY)) {
+//           const landingY = landPorterflake(flake.x, newY);
+//           return { ...flake, y: landingY, landed: true, rotation: newRotation };
+//         }
 
-  useEffect(() => {
-    const initialPorterflakes = Array.from({ length: MAX_FALLING_PORTER_FLAKES }, createPorterflake);
-    setPorterflakes(initialPorterflakes);
+//         return { ...flake, y: newY, rotation: newRotation };
+//       });
 
-    isAnimatingRef.current = true;
-    animationFrameRef.current = requestAnimationFrame(animate);
+//       // Count falling Porterflakes
+//       const fallingFlakes = updatedPorterflakes.filter(
+//         (flake) => !flake.landed
+//       );
 
-    return () => {
-      isAnimatingRef.current = false;
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [animate, createPorterflake]);
+//       // Add new Porterflakes if there are less than MAX_FALLING_PorterFLAKES
+//       const newFlakesCount = MAX_FALLING_PORTER_FLAKES - fallingFlakes.length;
+//       const newFlakes = PorterflakeQueue.current.splice(0, newFlakesCount);
 
-  const handleDimensionsChange = useCallback((dimensions) => {
-    setTextDimensions(dimensions);
-  }, []);
+//       if (
+//         newFlakes.length < newFlakesCount &&
+//         PorterflakeQueue.current.length === 0
+//       ) {
+//         // If queue is empty, regenerate Porterflakes
+//         PorterflakeQueue.current = Array.from({ length: count }, (_, index) =>
+//           createPorterflake(index + count)
+//         );
+//       }
 
-  return (
-    <div ref={containerRef} className="porter-container bg-black">
-      {porterflakes.map((flake) => (
-        <span
-          key={flake.id}
-          className="porterflake"
-          style={{
-            left: `${flake.x}%`,
-            top: `${flake.y}%`,
-            transform: `rotate(${flake.rotation}deg)`,
-            color: color,
-            fontSize: size,
-          }}
-        >
-          {text}
-        </span>
-      ))}
-      <div className="typewriter-container">
-        <TypewriterText sentences={sentences} onDimensionsChange={handleDimensionsChange} />
-      </div>
-      {textDimensions && (
-        <div
-          style={{
-            position: 'absolute',
-            left: `${(textDimensions.left / containerRef.current.getBoundingClientRect().width) * 100}%`,
-            top: `${(textDimensions.top / containerRef.current.getBoundingClientRect().height) * 100}%`,
-            width: `${(textDimensions.width / containerRef.current.getBoundingClientRect().width) * 100}%`,
-            height: `${(textDimensions.height / containerRef.current.getBoundingClientRect().height) * 100}%`,
-            border: '1px solid red',
-            pointerEvents: 'none',
-          }}
-        />
-      )}
-    </div>
-  );
-};
+//       return [...updatedPorterflakes, ...newFlakes];
+//     });
 
-export default Porter;
+//     requestAnimationFrame(animate);
+//   };
+
+//   return (
+//     <div ref={containerRef} className="porter-container bg-black">
+//       {Porterflakes.map((flake) => (
+//         <span
+//           key={flake.id}
+//           className={`porterflake ${flake.landed ? "landed" : ""}`}
+//           style={{
+//             left: `${flake.x}%`,
+//             top: `${flake.y}%`,
+//             transform: `rotate(${flake.rotation}deg)`,
+//             color: color,
+//             fontSize: size,
+//           }}
+//         >
+//           {text}
+//         </span>
+//       ))}
+//       <div className="typewriter-container">
+//         <TypewriterText sentences={sentences} />
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default Porter;

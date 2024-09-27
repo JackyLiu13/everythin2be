@@ -1,7 +1,4 @@
 import React from 'react';
-import Falling from '../components/Falling';
-import Snow from '../components/Snow';
-import Porter from '../components/Porter';
 import Hearts from '../components/Hearts';
 
 const Home = () => {

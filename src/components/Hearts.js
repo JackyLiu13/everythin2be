@@ -35,7 +35,6 @@ const TyperWrapper = styled.div`
 
 const Hearts = ({ speed = 120, count = 500, maxActiveHearts = 15 }) => {
   const [hearts, setHearts] = useState([]);
-  const [activeHearts, setActiveHearts] = useState(0);
   const containerRef = useRef(null);
   const typerRef = useRef(null);
   const animationFrameRef = useRef(null);
@@ -105,7 +104,6 @@ const Hearts = ({ speed = 120, count = 500, maxActiveHearts = 15 }) => {
   useEffect(() => {
     // Initialize with maxActiveHearts
     setHearts(Array.from({ length: maxActiveHearts }, () => createHeart()));
-    setActiveHearts(maxActiveHearts);
 
     const updateHearts = (timestamp) => {
       const containerRect = containerRef.current?.getBoundingClientRect();
@@ -129,16 +127,13 @@ const Hearts = ({ speed = 120, count = 500, maxActiveHearts = 15 }) => {
           const collisionResult = checkCollision(heart, acc);
           
           if (collisionResult === 'delete') {
-            setActiveHearts(prev => prev - 1);
             // Don't add this heart to acc, effectively deleting it
           } else if (collisionResult) {
             heart.settled = true;
             heart.top = collisionResult.top;
             heart.hasFoundation = collisionResult.hasFoundation;
-            setActiveHearts(prev => prev - 1);
             acc.push(heart);
           } else if (heart.top > containerRect.height) {
-            setActiveHearts(prev => prev - 1);
             // Don't add this heart to acc if it's out of bounds
           } else {
             acc.push(heart);
@@ -149,7 +144,6 @@ const Hearts = ({ speed = 120, count = 500, maxActiveHearts = 15 }) => {
         // Add new hearts to replace deleted or settled ones
         while (newHearts.length < count && newHearts.filter(h => !h.settled).length < maxActiveHearts) {
           newHearts.push(createHeart());
-          setActiveHearts(prev => prev + 1);
         }
 
         return newHearts;
@@ -180,24 +174,24 @@ const Hearts = ({ speed = 120, count = 500, maxActiveHearts = 15 }) => {
         </Heart>
       ))}
       <TyperWrapper ref={typerRef}>
-  <Typer 
-    content={[
-      "New Builds",
-      "By New Systems",
-      "09/27/24 - 09/29/24",
-      "📍 Toronto",
-      "Thank you...",
-      "Tommy",
-      "Vin",
-      "And Everyone Participating",
-      "Very Excited!!",
-      "See you soon :)"
-    ]}
-    typingSpeed={11}
-    deletingSpeed={11}
-    pauseDuration={28}
-  />
-</TyperWrapper>
+        <Typer 
+          content={[
+            "New Builds",
+            "By New Systems",
+            "09/27/24 - 09/29/24",
+            "📍 Toronto",
+            "Thank you...",
+            "Tommy",
+            "Vin",
+            "And Everyone Participating",
+            "Very Excited!!",
+            "See you soon :)"
+          ]}
+          typingSpeed={11}
+          deletingSpeed={11}
+          pauseDuration={28}
+        />
+      </TyperWrapper>
     </HeartContainer>
   );
 };

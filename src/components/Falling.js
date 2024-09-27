@@ -1,74 +1,74 @@
-import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+// import React, { useState, useEffect } from 'react';
+// import styled from 'styled-components';
 
-const FallingContainer = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  pointer-events: none;
-`;
+// const FallingContainer = styled.div`
+//   position: fixed;
+//   top: 0;
+//   left: 0;
+//   width: 100%;
+//   height: 100%;
+//   overflow: hidden;
+//   pointer-events: none;
+// `;
 
-const FallingText = styled.span`
-  position: absolute;
-  color: rgba(255, 255, 255, 0.8);
-  user-select: none;
-`;
+// const FallingText = styled.span`
+//   position: absolute;
+//   color: rgba(255, 255, 255, 0.8);
+//   user-select: none;
+// `;
 
-const Falling = ({ text = '❄', count = 50, speed = 5 }) => {
-  const [fallingItems, setFallingItems] = useState([]);
+// const Falling = ({ text = '❄', count = 50, speed = 5 }) => {
+//   const [fallingItems, setFallingItems] = useState([]);
 
-  useEffect(() => {
-    const items = Array.from({ length: count }, (_, index) => ({
-      id: index,
-      x: Math.random() * 100,
-      y: -(Math.random() * 100),
-      speed: Math.random() * speed + 1,
-      landed: false,
-    }));
+//   useEffect(() => {
+//     const items = Array.from({ length: count }, (_, index) => ({
+//       id: index,
+//       x: Math.random() * 100,
+//       y: -(Math.random() * 100),
+//       speed: Math.random() * speed + 1,
+//       landed: false,
+//     }));
 
-    setFallingItems(items);
+//     setFallingItems(items);
 
-    const animationFrame = requestAnimationFrame(animate);
+//     const animate = () => {
+//       setFallingItems(prevItems =>
+//         prevItems.map(item => {
+//           if (item.landed) return item;
 
-    return () => cancelAnimationFrame(animationFrame);
-  }, [count, speed]);
+//           const newY = item.y + item.speed;
 
-  const animate = () => {
-    setFallingItems(prevItems =>
-      prevItems.map(item => {
-        if (item.landed) return item;
+//           if (newY >= 100) {
+//             return { ...item, y: 100, landed: true };
+//           }
 
-        const newY = item.y + item.speed;
+//           return { ...item, y: newY };
+//         })
+//       );
 
-        if (newY >= 100) {
-          return { ...item, y: 100, landed: true };
-        }
+//       requestAnimationFrame(animate);
+//     };
 
-        return { ...item, y: newY };
-      })
-    );
+//     const animationFrame = requestAnimationFrame(animate);
 
-    requestAnimationFrame(animate);
-  };
+//     return () => cancelAnimationFrame(animationFrame);
+//   }, [count, speed]);
 
-  return (
-    <FallingContainer>
-      {fallingItems.map(item => (
-        <FallingText
-          key={item.id}
-          style={{
-            left: `${item.x}%`,
-            top: `${item.y}%`,
-          }}
-        >
-          {text}
-        </FallingText>
-      ))}
-    </FallingContainer>
-  );
-};
+//   return (
+//     <FallingContainer>
+//       {fallingItems.map(item => (
+//         <FallingText
+//           key={item.id}
+//           style={{
+//             left: `${item.x}%`,
+//             top: `${item.y}%`,
+//           }}
+//         >
+//           {text}
+//         </FallingText>
+//       ))}
+//     </FallingContainer>
+//   );
+// };
 
-export default Falling;
+// export default Falling;
